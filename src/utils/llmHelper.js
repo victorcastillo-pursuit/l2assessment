@@ -5,11 +5,17 @@ import Groq from 'groq-sdk';
  * Using Groq API for AI-powered categorization
  */
 
-// Initialize Groq client
-const groq = new Groq({
-  apiKey: import.meta.env.VITE_GROQ_API_KEY,
-  dangerouslyAllowBrowser: true // Required for browser-based calls (not recommended for production!)
-});
+// Lazily initialized — avoids a hard crash when no API key is configured
+let groq = null;
+function getGroqClient() {
+  if (!groq) {
+    groq = new Groq({
+      apiKey: import.meta.env.VITE_GROQ_API_KEY,
+      dangerouslyAllowBrowser: true
+    });
+  }
+  return groq;
+}
 
 /**
  * System prompt gives the model a clear role, valid output categories,
@@ -41,7 +47,10 @@ You MUST respond with valid JSON only — no explanation outside the JSON object
  */
 export async function categorizeMessage(message) {
   try {
-    const response = await groq.chat.completions.create({
+    if (!import.meta.env.VITE_GROQ_API_KEY) {
+      return getMockCategorization(message);
+    }
+    const response = await getGroqClient().chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
