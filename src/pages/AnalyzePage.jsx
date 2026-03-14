@@ -29,7 +29,7 @@ function AnalyzePage() {
     
     try {
       // Run categorization (LLM call)
-      const { category, reasoning } = await categorizeMessage(message)
+      const { category, reasoning, confidence } = await categorizeMessage(message)
       
       // Calculate urgency (rule-based)
       const urgency = calculateUrgency(message)
@@ -40,6 +40,7 @@ function AnalyzePage() {
       const analysisResult = {
         message,
         category,
+        confidence,
         urgency,
         recommendedAction,
         reasoning,
@@ -132,8 +133,19 @@ function AnalyzePage() {
             <div className="space-y-4">
               <div>
                 <div className="text-sm font-semibold text-gray-600 mb-1">Category</div>
-                <div className="inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-semibold">
-                  {results.category}
+                <div className="flex items-center gap-2">
+                  <div className="inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-semibold">
+                    {results.category}
+                  </div>
+                  {results.confidence && (
+                    <div className={`inline-block px-3 py-2 rounded-lg text-xs font-semibold ${
+                      results.confidence === 'high' ? 'bg-green-100 text-green-800' :
+                      results.confidence === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {results.confidence} confidence
+                    </div>
+                  )}
                 </div>
               </div>
 
